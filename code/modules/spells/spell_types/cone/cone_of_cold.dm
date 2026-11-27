@@ -46,12 +46,25 @@
 	/// 0 seconds mean no objects are frozen, INFINITY means infinite duration freeze
 	var/unfreeze_object_duration = 20 SECONDS
 
+/datum/action/cooldown/spell/cone/staggered/cone_of_cold/get_examine_effects()
+	. = ..()
+	var/list/damage_parts = list()
+	if(on_freeze_brute_damage)
+		damage_parts += "[on_freeze_brute_damage] brute"
+	if(on_freeze_burn_damage)
+		damage_parts += "[on_freeze_burn_damage] burn"
+	if(length(damage_parts))
+		. += "<b>DAMAGE:</b> [damage_parts.Join(", ")]"
+	if(ispath(frozen_status_effect_path) && unfreeze_mob_duration > 0 SECONDS && unfreeze_mob_duration != INFINITY)
+		. += "<b>FREEZE:</b> [DisplayTimeText(unfreeze_mob_duration)]"
+
 /datum/action/cooldown/spell/cone/staggered/cone_of_cold/cast(atom/cast_on)
 	. = ..()
 	new /obj/effect/temp_visual/dir_setting/icecone(get_step(cast_on, cast_on.dir), cast_on.dir)
 	playsound(cast_on, 'sound/combat/wooshes/blunt/wooshhuge (2).ogg', 50, TRUE)
 
 /datum/action/cooldown/spell/cone/staggered/cone_of_cold/do_turf_cone_effect(turf/target_turf, atom/caster, level)
+	target_turf.extinguish_turf()
 	if(!turf_freeze_type || unfreeze_turf_duration <= 0 SECONDS) // 0 duration = don't apply the slip
 		return
 	if(!isopenturf(target_turf))

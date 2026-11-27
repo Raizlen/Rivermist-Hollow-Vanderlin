@@ -88,6 +88,22 @@
 	arousal.arousal = 10
 	TEST_ASSERT(!speaker.should_speech_moan(), "A speaker with low arousal moans")
 
+/// Strength changes the emote pitch by default, and the toggle turns that off.
+/datum/unit_test/strength_voice_pitch_toggle
+
+/datum/unit_test/strength_voice_pitch_toggle/Run()
+	var/datum/preferences/prefs = new
+	TEST_ASSERT_EQUAL(prefs.read_preference(/datum/preference/toggle/strength_voice_pitch), TRUE, "Strength pitch defaults to off")
+
+	var/mob/living/carbon/human/speaker = allocate(/mob/living/carbon/human)
+	speaker.voice_pitch = 1
+	speaker.set_creator_stats(list(STAT_STRENGTH = 5))
+	TEST_ASSERT(speaker.get_emote_pitch() < 1, "High strength does not lower the pitch")
+
+	var/datum/preference/toggle/strength_voice_pitch/pref = GLOB.preference_entries[/datum/preference/toggle/strength_voice_pitch]
+	pref.apply_to_human(speaker, FALSE, prefs)
+	TEST_ASSERT_EQUAL(speaker.get_emote_pitch(), 1, "Strength changes the pitch with the toggle off")
+
 /// Barks are off by default, play with a bark set and stay silent for whispers and muffled mouths.
 /datum/unit_test/speech_bark_gate
 
@@ -105,6 +121,14 @@
 	TEST_ASSERT_EQUAL(speaker.speech_bark, "Chirp", "The bark choice did not reach the mob")
 	TEST_ASSERT(speaker.can_speech_bark(list()), "A speaker with a bark does not bark")
 	TEST_ASSERT(!speaker.can_speech_bark(list(WHISPER_MODE = MODE_WHISPER)), "A whisper barks")
+	TEST_ASSERT(!speaker.can_speech_bark(list(MODE_SING = TRUE)), "A song barks over its hum")
+
+	var/datum/component/arousal/arousal = speaker.GetComponent(/datum/component/arousal) || speaker.AddComponent(/datum/component/arousal)
+	speaker.speech_moans = TRUE
+	arousal.arousal = 60
+	TEST_ASSERT(!speaker.can_speech_bark(list()), "A moaning speaker barks over the moan")
+	arousal.arousal = 0
+	speaker.speech_moans = FALSE
 
 	speaker.mouth_blocked = TRUE
 	TEST_ASSERT(!speaker.can_speech_bark(list()), "A muffled speaker barks and reveals the voice")

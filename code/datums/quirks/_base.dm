@@ -21,7 +21,8 @@ GLOBAL_LIST_EMPTY(quirk_points_by_type)
 			"type" = quirk_type,
 			"desc" = initial(quirk_type.desc),
 			"desc_hint" = initial(quirk_type.desc_hint),
-			"value" = initial(quirk_type.point_value)
+			"value" = initial(quirk_type.point_value),
+			"admin_only" = initial(quirk_type.admin_only),
 		))
 		LAZYADDASSOC(GLOB.quirk_singletons, quirk_type, new quirk_type)
 
@@ -71,6 +72,8 @@ GLOBAL_LIST_EMPTY(quirk_points_by_type)
 	var/mob/living/owner
 	/// Can this be randomly selected?
 	var/random_exempt = FALSE
+	/// Players cannot pick this quirk; admins and game code can still add it.
+	var/admin_only = FALSE
 	/// Does this render in the preview?
 	var/preview_render = TRUE
 
@@ -80,6 +83,8 @@ GLOBAL_LIST_EMPTY(quirk_points_by_type)
 	var/customization_value = null
 	/// Label for the customization dropdown
 	var/customization_label = "Select Option"
+	/// How many options the player may pick from customization_options; above 1 the value is a list.
+	var/max_picks = 1
 
 	/// Type of customization: "select" for dropdown, "text" for text input, "number" for numeric
 	var/customization_type = QUIRK_SELECT
@@ -181,6 +186,17 @@ GLOBAL_LIST_EMPTY(quirk_points_by_type)
 /datum/quirk/proc/return_customization(datum/preferences/prefs)
 	return customization_options.Copy()
 
+/// The picked options as a list, for single values and multi-pick lists alike.
+/datum/quirk/proc/get_picks(value = customization_value)
+	if(islist(value))
+		var/list/picks = value
+		return picks.Copy()
+	return isnull(value) ? list() : list(value)
+
+/// Lets a quirk adjust the saved value with the character's preferences right before it is applied.
+/datum/quirk/proc/resolve_customization(datum/preferences/prefs, value)
+	return value
+
 /datum/quirk/proc/get_extra_value(key, default_value = null)
 	if(!key)
 		return default_value
@@ -200,6 +216,8 @@ GLOBAL_LIST_EMPTY(quirk_points_by_type)
 /datum/quirk/proc/is_available(datum/preferences/prefs)
 	if(!prefs)
 		return TRUE
+	if(admin_only)
+		return FALSE
 
 	// Check age restrictions
 	if(length(allowed_ages) && !(prefs.read_preference(/datum/preference/choiced/age) in allowed_ages))

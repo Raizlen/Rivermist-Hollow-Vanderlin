@@ -679,8 +679,7 @@
 
 			L.ExtinguishMob()
 			//handle hygiene and clean off alcohol
-			var/list/equipped_items = L.get_equipped_items()
-			if(length(equipped_items) > 0)
+			if(length(L.get_bathing_clothes()))
 				to_chat(user, span_notice("I could probably clean myself faster if I weren't wearing clothes..."))
 				L.adjust_hygiene(HYGIENE_GAIN_CLOTHED * cleanliness_factor)
 				L.adjust_fire_stacks(-4)
@@ -699,13 +698,21 @@
 	user.visible_message(span_info("[user] starts to drink from [src]."))
 	if(!do_after(user, 2.5 SECONDS, src))
 		return TRUE
+	drink_gulp(user)
+	while(user.auto_consume_continues(TRUE, FALSE, water_volume >= 10))
+		if(!user.auto_consume_wait(2.5 SECONDS, src) || water_volume < 10)
+			break
+		drink_gulp(user)
+	return TRUE
+
+/// One gulp of this water.
+/turf/open/water/proc/drink_gulp(mob/living/user)
 	var/datum/reagents/reagents = new()
 	reagents.add_reagent(water_reagent, 2)
 	reagents.trans_to(user, reagents.total_volume, transfered_by = user, method = INGEST)
 	if(!mapped)
 		adjust_originate_watervolume(-2)
 	playsound(user,pick('sound/items/drink_gen (1).ogg','sound/items/drink_gen (2).ogg','sound/items/drink_gen (3).ogg'), 100, TRUE)
-	return TRUE
 
 /turf/open/water/Destroy()
 	STOP_PROCESSING(SSobj, src)

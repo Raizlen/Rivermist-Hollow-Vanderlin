@@ -1,5 +1,6 @@
 /datum/status_effect/buff
 	status_type = STATUS_EFFECT_REFRESH
+	alert_type = null
 
 #define DRUNK_STUMBLE_MIN_DRUNKENNESS 21
 #define DRUNK_STUMBLE_FULL_DRUNKENNESS 81
@@ -174,10 +175,12 @@
 		var/mob/living/carbon/C = owner
 		C.add_stress(/datum/stress_event/ozium)
 	ADD_TRAIT(owner, TRAIT_NOPAIN, TRAIT_STATUS_EFFECT(id))
+	ADD_TRAIT(owner, TRAIT_NOPAINSTUN, TRAIT_STATUS_EFFECT(id))
 
 /datum/status_effect/buff/ozium/on_remove()
 	. = ..()
 	REMOVE_TRAIT(owner, TRAIT_NOPAIN, TRAIT_STATUS_EFFECT(id))
+	REMOVE_TRAIT(owner, TRAIT_NOPAINSTUN, TRAIT_STATUS_EFFECT(id))
 	if(iscarbon(owner))
 		var/mob/living/carbon/C = owner
 		C.remove_stress(/datum/stress_event/ozium)
@@ -767,7 +770,7 @@
 
 // TIER 4 - EXPERT
 /datum/status_effect/bardicbuff/speed
-	name = "Inspiring (+1 SPD)"
+	name = "Inspiring (+1 DEX)"
 	id = "bardbuff_spd"
 	effectedstats = list(STAT_SPEED = 1)
 	alert_type = /atom/movable/screen/alert/status_effect/bardbuff/speed
@@ -777,7 +780,7 @@
 
 // TIER 5 - MASTER
 /datum/status_effect/bardicbuff/ravox
-	name = "Empowering (+1 STR, +1 PER)"
+	name = "Empowering (+1 STR, +1 WIS)"
 	id = "bardbuff_str"
 	effectedstats = list(STAT_STRENGTH = 1, STAT_PERCEPTION = 1)
 	alert_type = /atom/movable/screen/alert/status_effect/bardbuff/ravox

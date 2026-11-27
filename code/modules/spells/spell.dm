@@ -537,6 +537,10 @@
 /datum/action/cooldown/spell/Activate(atom/target)
 	SHOULD_NOT_OVERRIDE(TRUE)
 
+	// AI controllers call Activate directly, past can_cast_spell.
+	if(owner && !can_invoke(feedback = FALSE))
+		return FALSE
+
 	// Pre-casting of the spell
 	// Pre-cast is the very last chance for a spell to cancel
 	// Stuff like target input can go here.
@@ -818,12 +822,28 @@
 			owner.balloon_alert(owner, "can't position your hands correctly to invoke!")
 		return FALSE
 
-	if((invocation_type == INVOCATION_WHISPER || invocation_type == INVOCATION_SHOUT) && !ignore_can_speak && !living_owner.can_speak_vocal())
+	var/refusal = spoken_invocation_refusal()
+	if(refusal)
 		if(feedback)
-			owner.balloon_alert(owner, "can't get the words out to invoke!")
+			to_chat(owner, span_warning(refusal))
 		return FALSE
 
 	return TRUE
+
+/// Why the owner cannot say this spell's spoken words, or null when they can or none are needed.
+/datum/action/cooldown/spell/proc/spoken_invocation_refusal()
+	if(ignore_can_speak || (spell_requirements & SPELL_CASTABLE_WITHOUT_INVOCATION))
+		return null
+	if(invocation_type != INVOCATION_WHISPER && invocation_type != INVOCATION_SHOUT)
+		return null
+	var/mob/living/living_owner = owner
+	// Wordless spoken spells, like bard songs, only need a voice.
+	var/has_words = length(invocation)
+	if(has_words && living_owner.is_speech_muffled())
+		return "I cannot speak the words with my mouth stopped."
+	if(!living_owner.can_speak_vocal() || (has_words && !living_owner.can_voice_words()))
+		return "I cannot get the words out."
+	return null
 
 /// Resets the cooldown of the spell, sending COMSIG_SPELL_CAST_RESET
 /// and allowing it to be used immediately (+ updating button icon accordingly)
@@ -891,6 +911,57 @@
 			return "Ludicrous "
 
 	return ""
+
+/datum/action/cooldown/spell/get_examine_lines(mob/user)
+	. = list(span_notice("<b>[name]</b>"))
+	if(desc)
+		. += span_info(desc)
+
+	var/caster_known = isliving(owner)
+	var/cost = caster_known ? get_adjusted_cost() : spell_cost
+	var/cost_name = get_cost_name()
+	if(cost > 0 && cost_name)
+		. += "<b>COST:</b> [round(cost, 0.1)] [cost_name]"
+	if(cooldown_time > 0)
+		. += "<b>COOLDOWN:</b> [DisplayTimeText(cooldown_time)]"
+	if(charge_required)
+		. += "<b>CHARGE TIME:</b> [DisplayTimeText(caster_known ? get_adjusted_charge_time() : charge_time)]"
+	if(click_to_activate)
+		. += "<b>RANGE:</b> [cast_range]"
+
+	. += get_examine_effects()
+
+/// Damage, healing and similar effect lines for the examine block. Extend this in subtypes.
+/datum/action/cooldown/spell/proc/get_examine_effects()
+	return list()
+
+/// The resource name for [spell_type], as the player sees it.
+/datum/action/cooldown/spell/proc/get_cost_name()
+	switch(spell_type)
+		if(SPELL_MANA)
+			return "mana"
+		if(SPELL_STAMINA)
+			return "stamina"
+		if(SPELL_MIRACLE)
+			return "devotion"
+		if(SPELL_ESSENCE)
+			return "essence"
+		if(SPELL_BLOOD)
+			return "vitae"
+		if(SPELL_PSYDONIC_MIRACLE)
+			return "grace"
+		if(SPELL_RAGE)
+			return "rage"
+	return ""
+
+/// Readable name of a damage type define.
+/datum/action/cooldown/spell/proc/get_damage_type_name(damage_type)
+	switch(damage_type)
+		if(BURN)
+			return "burn"
+		if(OXY)
+			return "suffocation"
+	return damage_type
 
 /// Check if the spell is castable by cost
 /datum/action/cooldown/spell/proc/check_cost(cost_override, feedback = TRUE)

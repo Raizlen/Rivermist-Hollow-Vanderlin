@@ -68,6 +68,7 @@
 	soundpack_f = /datum/voicepack/werewolf
 
 	statsheet_male = /datum/attribute_holder/sheet/job/species/werewolf
+	forced_attribute_sheets = TRUE
 
 	enflamed_icon = "widefire"
 
@@ -126,8 +127,8 @@
 	)
 	held_item_dir_offsets = paw_offsets
 
-/datum/species/werewolf/send_voice(mob/living/carbon/human/H)
-	playsound(H, pick('sound/vo/mobs/wwolf/wolftalk1.ogg', 'sound/vo/mobs/wwolf/wolftalk2.ogg'), 100, TRUE, -1)
+/datum/species/werewolf/send_voice(mob/living/carbon/human/H, message, list/message_mods, list/bark_listeners)
+	playsound(H, pick('sound/vo/mobs/wwolf/wolftalk1.ogg', 'sound/vo/mobs/wwolf/wolftalk2.ogg'), 100, TRUE, -1, excluded_listeners = bark_listeners)
 
 /datum/species/werewolf/regenerate_icons(mob/living/carbon/human/H)
 	var/datum/werewolf_form_look/look = get_form_look(H)

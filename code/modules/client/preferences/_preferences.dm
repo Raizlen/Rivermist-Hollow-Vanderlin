@@ -722,20 +722,16 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 	if(!silent)
 		to_chat(user, "<font color='red'>Culture reset.</font>")
 
-/datum/preferences/proc/reset_last_class(mob/user)
-	if(user.client?.prefs)
-		if(!user.client.prefs.lastclass)
-			return
-	if(browser_alert(user, "Use 2 TRIUMPHS to play as this class again?", "OUROBOROS", DEFAULT_INPUT_CONFIRMATIONS) != CHOICE_CONFIRM)
+/// Lets the last played class be picked again. Free.
+/datum/preferences/proc/reset_last_class(mob/user, skip_confirm = FALSE)
+	if(!lastclass)
 		return
-	if(user.client?.prefs)
-		if(user.client.prefs.lastclass)
-			if(user.get_triumphs() < 2)
-				to_chat(user, "<span class='warning'>I haven't TRIUMPHED enough.</span>")
-				return
-			user.adjust_triumphs(-2)
-			user.client.prefs.lastclass = null
-			user.client.prefs.save_preferences()
+	if(!skip_confirm && browser_alert(user, "Play as [lastclass] again?", "OUROBOROS", DEFAULT_INPUT_CONFIRMATIONS) != CHOICE_CONFIRM)
+		return
+	if(!lastclass)
+		return
+	lastclass = null
+	save_preferences()
 
 /datum/preferences/proc/set_keybinds(mob/user)
 	var/list/dat = list()
@@ -1471,6 +1467,9 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 				return FALSE
 			user.client.toggle_speech_moans()
 			return TRUE
+		if("strength_voice_pitch")
+			toggle_preference(/datum/preference/toggle/strength_voice_pitch)
+			return TRUE
 		if("voicepack")
 			var/current_voice_pack = read_preference(/datum/preference/choiced/voice_pack)
 			var/voicepack_input = tgui_input_list(user, "CHOOSE YOUR HERO'S EMOTE VOICE PACK", "VOICE PACK", GLOB.voice_packs_list, current_voice_pack)
@@ -1631,6 +1630,8 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 			winshow(user, "stonekeep_prefwin", FALSE)
 			return TRUE
 		if("save")
+			if(!character_creator_cooldown_ready(user, "save"))
+				return TRUE
 			save_preferences()
 			save_character()
 			if(isnewplayer(user))
@@ -2346,6 +2347,8 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 	// RMH EDITED START - self-written tattoos, applied after species/bodyparts are set up
 	apply_prosthetics_to_human(character, character_setup)
 	apply_tattoos_to_human(character)
+	if(!character_setup)
+		apply_stat_allocation_to_human(character)
 	// RMH EDITED END
 
 	if(icon_updates)

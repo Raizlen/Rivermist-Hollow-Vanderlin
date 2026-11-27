@@ -36,6 +36,7 @@
 	no_equip = list(ITEM_SLOT_SHIRT, ITEM_SLOT_HEAD, ITEM_SLOT_MASK, ITEM_SLOT_ARMOR, ITEM_SLOT_GLOVES, ITEM_SLOT_SHOES, ITEM_SLOT_PANTS, ITEM_SLOT_CLOAK)
 	statsheet_male = /datum/attribute_holder/sheet/job/species/gnoll_champion
 	statsheet_female = /datum/attribute_holder/sheet/job/species/gnoll_champion
+	forced_attribute_sheets = TRUE
 	offset_features_m = list(OFFSET_HANDS = list(0, 2))
 	offset_features_f = list(OFFSET_HANDS = list(0, 2))
 	soundpack_m = /datum/voicepack/gnoll_champion
@@ -171,11 +172,11 @@
 		champion.icon_state = initial(champion.icon_state)
 	return ..()
 
-/datum/species/gnoll_champion/send_voice(mob/living/carbon/human/champion)
+/datum/species/gnoll_champion/send_voice(mob/living/carbon/human/champion, message, list/message_mods, list/bark_listeners)
 	if(champion.m_intent != MOVE_INTENT_SNEAK)
-		playsound(champion, pick('sound/vo/mobs/wwolf/wolftalk1.ogg', 'sound/vo/mobs/wwolf/wolftalk2.ogg'), 100, TRUE, -1)
+		playsound(champion, pick('sound/vo/mobs/wwolf/wolftalk1.ogg', 'sound/vo/mobs/wwolf/wolftalk2.ogg'), 100, TRUE, -1, excluded_listeners = bark_listeners)
 	else
-		playsound(champion, 'sound/misc/talk.ogg', 100, TRUE, -1)
+		playsound(champion, 'sound/misc/talk.ogg', 100, TRUE, -1, excluded_listeners = bark_listeners)
 
 /datum/voicepack/gnoll_champion
 	parent_type = /datum/voicepack/werewolf

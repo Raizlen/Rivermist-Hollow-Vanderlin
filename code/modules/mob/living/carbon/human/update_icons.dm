@@ -395,25 +395,31 @@ GLOBAL_PROTECT(no_child_icons)
 	var/obj/item/bodypart/taur/T = get_bodypart(BODY_ZONE_TAUR)
 
 	if(client && hud_used)
-		var/atom/movable/screen/inventory/inv = hud_used.inv_slots[TOBITSHIFT(ITEM_SLOT_RING) + 1]
-		inv?.update_appearance(UPDATE_ICON_STATE)
+		for(var/atom/movable/screen/inventory/ring/cell as anything in hud_used.ring_slots)
+			cell.update_appearance(UPDATE_ICON_STATE)
 
-	if(wear_ring)
-		wear_ring.screen_loc = rogueui_ringr
+	var/list/offsets = get_offset_features()
+	var/list/ring_overlays = list()
+	for(var/index in 1 to RING_SLOTS)
+		var/obj/item/ring = wear_rings[index]
+		if(!ring)
+			continue
+		ring.screen_loc = ring_slot_screen_loc(index)
+		ring.update_transform()
 		if(client && hud_used?.hud_shown)
-			client.screen += wear_ring
-		update_observer_view(wear_ring)
+			client.screen += ring
+		update_observer_view(ring)
 
-		var/list/offsets = get_offset_features()
-
-		var/mutable_appearance/ring_overlay = wear_ring.build_worn_icon(age, RING_LAYER, 'icons/roguetown/clothing/onmob/rings.dmi')
+		var/mutable_appearance/ring_overlay = ring.build_worn_icon(age, RING_LAYER, 'icons/roguetown/clothing/onmob/rings.dmi')
 		if(LAZYACCESS(offsets, OFFSET_RING))
 			ring_overlay.pixel_x += offsets[OFFSET_RING][1]
 			ring_overlay.pixel_y += offsets[OFFSET_RING][2]
-		// Apply taur body offset to adjust rendering height for taurs like jdeer
 		if(T && T.body_offset_y)
 			ring_overlay.pixel_y += T.body_offset_y
-		overlays_standing[RING_LAYER] = ring_overlay
+		ring_overlays += ring_overlay
+
+	if(length(ring_overlays))
+		overlays_standing[RING_LAYER] = ring_overlays
 
 	apply_overlay(RING_LAYER)
 
@@ -807,7 +813,9 @@ GLOBAL_PROTECT(no_child_icons)
 		update_hud_wear_mask(wear_mask)
 		var/list/obscured = check_obscured_slots()
 		if(!(ITEM_SLOT_MASK & obscured[SLOT_CHECK_REGULAR]))
-			var/mutable_appearance/mask_overlay = wear_mask.build_worn_icon(default_layer = MASK_LAYER, default_icon_file = 'icons/roguetown/clothing/onmob/masks.dmi')
+			// Head items (hoods etc.) worn as masks keep their worn states in head.dmi.
+			var/mask_icon_file = istype(wear_mask, /obj/item/clothing/head) ? 'icons/roguetown/clothing/onmob/head.dmi' : 'icons/roguetown/clothing/onmob/masks.dmi'
+			var/mutable_appearance/mask_overlay = wear_mask.build_worn_icon(default_layer = MASK_LAYER, default_icon_file = mask_icon_file)
 			var/list/offsets = get_offset_features()
 			var/obj/item/bodypart/taur/T = get_bodypart(BODY_ZONE_TAUR)
 			if(mask_overlay)

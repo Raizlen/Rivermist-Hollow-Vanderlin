@@ -147,6 +147,7 @@
 		/datum/supply_pack/armor/iron/ifull_plate,
 		/datum/supply_pack/armor/steel/elvenhelm,
 		/datum/supply_pack/armor/steel/elvenplate,
+		/datum/supply_pack/armor/steel/wardenhelm,
 		// Apparel
 		/datum/supply_pack/apparel/ridingboots,
 		/datum/supply_pack/jewelry/nosesilver,
@@ -177,6 +178,8 @@
 		/datum/supply_pack/food/drinks/voddena,
 		/datum/supply_pack/jewelry/circlet,
 		/datum/supply_pack/luxury/chess,
+		/datum/supply_pack/luxury/card_boosters, //RMH EDITED - card games
+		/datum/supply_pack/luxury/playing_cards, //RMH EDITED - card games
 		/datum/supply_pack/luxury/silver_plaque_belt,
 		/datum/supply_pack/narcotics/perfume/random,
 		/datum/supply_pack/narcotics/perfume/lavender,
@@ -209,6 +212,7 @@
 		/datum/supply_pack/armor/steel/chainmail_hauberk,
 		/datum/supply_pack/armor/steel/visorsallet,
 		/datum/supply_pack/armor/steel/half_plate,
+		/datum/supply_pack/armor/iron/coppergatehelm,
 		/datum/supply_pack/jewelry/goldring,
 		/datum/supply_pack/rawmats/riddle_of_steel,
 		/datum/supply_pack/luxury/talkstone,

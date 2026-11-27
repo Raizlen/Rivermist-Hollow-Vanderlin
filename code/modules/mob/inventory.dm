@@ -260,6 +260,9 @@
 		return FALSE
 	if(!temporarilyRemoveItemFromInventory(I, force_removal))
 		return FALSE
+	//Unequipping can delete the item or send it to nullspace (a hood stowed by its cloak)
+	if(QDELETED(I) || !I.loc)
+		return FALSE
 	I.remove_item_from_storage(src)
 	if(!put_in_hand(I, hand_index))
 		qdel(I)
@@ -379,8 +382,7 @@
 		items += beltr
 	if(beltl)
 		items += beltl
-	if(wear_ring)
-		items += wear_ring
+	items += get_worn_rings()
 	if(wear_wrists)
 		items += wear_wrists
 	if(wear_armor)
@@ -406,6 +408,20 @@
 	if(earring_r)
 		items += earring_r
 	return items
+
+/// Worn items that count as clothes when bathing.
+/mob/living/proc/get_bathing_clothes()
+	return get_equipped_items()
+
+// Rings, chokers, earrings, garters, belts, bags and unarmored neck or wrist pieces do not count.
+/mob/living/carbon/human/get_bathing_clothes()
+	var/list/clothes = list()
+	for(var/obj/item/worn in list(head, wear_mask, shoes, gloves, wear_armor, wear_pants, cloak, wear_shirt, underwear, bra, undershirt))
+		clothes += worn
+	for(var/obj/item/worn in list(wear_neck, wear_wrists))
+		if(worn.get_armor().type != /datum/armor/none)
+			clothes += worn
+	return clothes
 
 /mob/living/proc/unequip_everything(silent = TRUE)
 	var/list/items = list()
@@ -507,8 +523,7 @@
 	for(var/slot in SLOT_DISPLAY_PRIORITY)
 		if(obscured_slots[SLOT_CHECK_REGULAR] & slot || ((extra_obscured & slot) && (obscured_slots[SLOT_CHECK_EXTRA] & ITEM_SLOT_EXTRA)))
 			continue
-		var/obj/item/I = get_item_by_slot(slot)
-		if(I)
+		for(var/obj/item/I as anything in get_items_by_slot(slot))
 			items[I] = slot
 	return items
 

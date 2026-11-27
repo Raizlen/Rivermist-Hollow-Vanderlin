@@ -256,13 +256,15 @@ GLOBAL_VAR_INIT(character_setup_debug, FALSE)
 			"value" = value,
 		))
 
+/// What a species gives a creator-made character's stats: extra stat points, if any.
 /datum/preferences/proc/character_setup_species_stat_modifiers(datum/species/species)
-	if(!species)
+	if(!species?.creator_stat_points)
 		return list()
-	var/sheet_type = species.statsheet_male
-	if(read_preference(/datum/preference/choiced/gender) == FEMALE && species.statsheet_female)
-		sheet_type = species.statsheet_female
-	return character_setup_stat_modifiers_for_sheet(sheet_type)
+	return list(list(
+		"name" = "Stat points",
+		"label" = "PTS",
+		"value" = species.creator_stat_points,
+	))
 
 /datum/preferences/proc/character_setup_age_sheet_type(age_name)
 	switch(age_name)
@@ -388,6 +390,7 @@ GLOBAL_VAR_INIT(character_setup_debug, FALSE)
 	var/had_mutant_colors = has_mutant_color_preferences()
 	write_preference(/datum/preference/choiced/selected_accent, ACCENT_NONE)
 	set_species_preference(new_species)
+	validate_stat_allocation() // RMH EDIT: the new species can give fewer stat points
 
 	to_chat(user, "<em>[pref_species.name]</em>")
 	if(pref_species.desc)
@@ -650,9 +653,11 @@ GLOBAL_VAR_INIT(character_setup_debug, FALSE)
 		return new_player.character_setup_chargen_join_round()
 
 	if(SSticker.current_state <= GAME_STATE_PREGAME)
+		if(new_player.ready == PLAYER_READY_TO_PLAY && SSticker.job_change_locked)
+			return TRUE
+		if(!character_creator_cooldown_ready(new_player, "ready"))
+			return TRUE
 		if(new_player.ready == PLAYER_READY_TO_PLAY)
-			if(SSticker.job_change_locked)
-				return TRUE
 			return new_player.character_setup_chargen_set_ready(PLAYER_NOT_READY)
 		return new_player.character_setup_chargen_set_ready(PLAYER_READY_TO_PLAY)
 
@@ -937,13 +942,13 @@ GLOBAL_VAR_INIT(character_setup_debug, FALSE)
 	data["voice_pack"] = voice_pack || VOICE_PACK_DEFAULT
 	data["speech_bark"] = read_preference(/datum/preference/choiced/speech_bark)
 	data["speech_moans"] = !!read_preference(/datum/preference/toggle/speech_moans)
+	data["strength_voice_pitch"] = !!read_preference(/datum/preference/toggle/strength_voice_pitch)
 	data["moan_selection"] = moan_selection || MOANPACK_TYPE_DEF
 	data["selected_accent"] = selected_accent || "None"
 
 	data["loadout_slots"] = character_setup_loadout_slots_data()
 	data["loadout_points"] = character_setup_loadout_points_data()
 	data["loadout_presets"] = character_setup_loadout_presets_data()
-	data["triumphs"] = user?.client ? user.get_triumphs() : 0
 
 	var/combat_music_name = combat_music?.shortname ? combat_music.shortname : combat_music?.name
 	data["combat_music"] = combat_music_name || "Default"

@@ -44,7 +44,7 @@
 	. = ..()
 	var/mob/living/carbon/human/human_councilor = spawned
 	grant_outlaw_decree(human_councilor)
-	spawned.verbs |= /mob/living/carbon/human/proc/councilor_announcement
+	add_verb(spawned, /mob/living/carbon/human/proc/councilor_announcement)
 
 // ─────────────────────────────
 // SUBCLASSES
@@ -284,9 +284,10 @@
 		/datum/attribute/skill/misc/lockpicking = 30,
 		/datum/attribute/skill/misc/athletics = 20,
 		/datum/attribute/skill/misc/medicine = 20,
+		/datum/attribute/skill/misc/climbing = 20,
 		/datum/attribute/skill/labor/mathematics = 20,
 		/datum/attribute/skill/combat/unarmed = 20,
-		/datum/attribute/skill/combat/knives = 20
+		/datum/attribute/skill/combat/knives = 30
 	)
 
 /datum/job/advclass/councilor/spymaster
@@ -341,7 +342,7 @@
 //ANNOUNCEMENT SYSTEM
 
 /mob/living/carbon/human/proc/councilor_announcement()
-	set name = "Announcement"
+	set name = "Councilor Announcement"
 	set category = "Councilor"
 	if(stat)
 		return
